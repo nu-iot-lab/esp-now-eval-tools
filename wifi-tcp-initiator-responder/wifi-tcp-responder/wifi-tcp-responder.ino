@@ -19,7 +19,7 @@ char str[100];
 
 void writeFile(fs::FS &fs, const char * path, const char * message){
     File file = fs.open(path, FILE_WRITE);
-    
+
     if(!file){
         Serial.println("Failed to open file for writing");
         return;
@@ -42,9 +42,6 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
 
 void setup(){
   WiFi.mode(WIFI_STA);
-  
-  // esp_wifi_start();
-  // ESP_ERROR_CHECK( esp_wifi_set_protocol(WIFI_IF_STA, (WIFI_PROTOCOL_11B| WIFI_PROTOCOL_11G| WIFI_PROTOCOL_11N)) );
   int a = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11N);
   Serial.println(a);
 
@@ -61,7 +58,7 @@ void setup(){
     delay(100);
     Serial.println("connecting to wifi");
   } while (WiFi.status() != WL_CONNECTED);
-  
+
   Udp.begin(localUdpPort);
 }
 

@@ -24,9 +24,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
     Serial.println("Failed to open file for appending");
     return;
   }
-  if(file.print(message)){
-    // Serial.println("Message appended");
-  } else {
+  if(!file.print(message)){
     Serial.println("Append failed");
   }
   file.close();
@@ -36,7 +34,6 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
 
 int rssi_display;
 
-// Estructuras para calcular los paquetes, el RSSI, etc
 typedef struct {
   unsigned frame_ctrl: 16;
   unsigned duration_id: 16;
@@ -52,7 +49,6 @@ typedef struct {
   uint8_t payload[0]; // network data ended with 4 bytes csum (CRC32) 
 } wifi_ieee80211_packet_t;
 
-//La callback que hace la magia
 void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
   // All espnow traffic uses action frames which are a subtype of the mgmnt frames so filter out everything else.
   if (type != WIFI_PKT_MGMT)
@@ -68,26 +64,20 @@ void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
 
 //////////////////////////////////// END RSSI /////////////////////////////////
 
-const int num_of_slaves = 1;
+const int num_of_slaves = 5;
 
 uint8_t bcMACs[num_of_slaves][6] = {
-  // {0x0C,0xB8,0x15,0xD7,0x82,0x28}, // E1
+  {0x0C,0xB8,0x15,0xD7,0x82,0x28}, // E1
   {0x0C,0xB8,0x15,0xD7,0x99,0x58}, // E2
-  // {0x0C,0xB8,0x15,0xD6,0x0E,0xA8}, // E4
-  // {0x0C,0xB8,0x15,0xD8,0x22,0x34}, // E6
-  // {0x0C,0xB8,0x15,0xD8,0x27,0x10} // E7
-  // {0x78,0x21,0x84,0x7C,0x98,0xD8} // 1
-  // {0x84,0xCC,0xA8,0x57,0xCE,0x2C}, // 2
-  // {0x0C,0xB8,0x15,0xD7,0x90,0xDC}, // E5
-  // {0x4C,0x11,0xAE,0x9F,0x71,0x04}, // E9
+  {0x0C,0xB8,0x15,0xD6,0x0E,0xA8}, // E4
+  {0x0C,0xB8,0x15,0xD8,0x22,0x34}, // E6
+  {0x0C,0xB8,0x15,0xD8,0x27,0x10} // E7
 };
 
 // Define a data structure with fixed size
 typedef struct struct_message {
   unsigned long time;
   unsigned int packetNumber;
-  // const char msg[100] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  // uint8_t arr[240];
 } struct_message;
 int dataSize = 8;
 
@@ -134,15 +124,6 @@ void setup() {
 
   // clearNVS();
 
-  // for (int i = 0; i < 100; i++) {
-  //   myData.msg[i] = "a";
-  //   Serial.printf("%c", myData.msg[i]);
-  // }
-  // for (int i = 0; i < 242; i++) {
-  //   myData.arr[i] = 1;
-  // }
-  // Serial.println(sizeof(myData.arr));
-
   //Init sd card
   if(!SD.begin()){
     Serial.println("Card Mount Failed");
@@ -151,7 +132,6 @@ void setup() {
 
   myData.packetNumber = 1;
 
-  // WiFi.useStaticBuffers(true);
   // Set ESP32 as a Wi-Fi AP
   WiFi.mode(WIFI_STA);
   esp_wifi_start();
@@ -164,16 +144,8 @@ void setup() {
   int b = esp_wifi_set_max_tx_power(80);
   Serial.println(b);
 
-  // Serial.print("WIFI LR ");
-  // Serial.println(a);
-
-  // sprintf(str, "WIFI LR %d\n", a); 
-  // Serial.printf(str);
-  // appendFile(SD, path, str);
-
   // Initilize ESP-NOW
   if (esp_now_init() != ESP_OK) {
-    // Serial.println("Error initializing ESP-NOW");
     sprintf(str, "Error initializing ESP-NOW\n");
     Serial.printf(str);
     appendFile(SD, path, str);
@@ -191,8 +163,6 @@ void setup() {
       sprintf(str, "Failed to add peer: %d\n", i);
       Serial.printf(str);
       appendFile(SD, path, str);
-      // Serial.print("Failed to add peer: ");
-      // Serial.println(i);
       return;
     }
   }
@@ -213,7 +183,6 @@ void setup() {
   // delay(1000*60*0.5);
     delay(1000*5);
 
-  // Serial.println("START");
   sprintf(str, "START\n");
   Serial.printf(str);
   appendFile(SD, path, str);
@@ -227,7 +196,7 @@ void loop() {
       packetSentTime = millis();
       myData.time = packetSentTime;
       esp_now_send(bcMACs[i], (uint8_t *) &myData, sizeof(myData));
-      //Serial.println(((result == ESP_OK)?"Sending confirmed":"Sending error"));
+
       sprintf(str, "sending packet %d to %d node\n", myData.packetNumber, i);
       Serial.printf(str);
       appendFile(SD, path, str);

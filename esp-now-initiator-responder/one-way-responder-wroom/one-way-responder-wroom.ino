@@ -15,7 +15,6 @@
 
 ///////////////////////// MAC STUFF, ENCRYPTION AND DATA /////////////////////////////
 
-
 // Set the MASTER MAC Address
 uint8_t masterAddress[] = {0x84,0xCC,0xA8,0x57,0xCE,0x2C}; // 2
 int packetReceived = 0;
@@ -30,10 +29,8 @@ esp_now_peer_info_t masterInfo;
 typedef struct struct_message {
   unsigned int packetNumber;
   unsigned long time;
-  // char msg[100];
-  // uint8_t arr[240];
 } struct_message;
-int dataSize = 108;
+int dataSize = 8;
 
 // Create a structured object
 struct_message myData;
@@ -42,7 +39,6 @@ struct_message myData;
 
 int rssi_display;
 
-// Estructuras para calcular los paquetes, el RSSI, etc
 typedef struct {
   unsigned frame_ctrl: 16;
   unsigned duration_id: 16;
@@ -58,7 +54,6 @@ typedef struct {
   uint8_t payload[0]; /* network data ended with 4 bytes csum (CRC32) */
 } wifi_ieee80211_packet_t;
 
-//La callback que hace la magia
 void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
   // All espnow traffic uses action frames which are a subtype of the mgmnt frames so filter out everything else.
   if (type != WIFI_PKT_MGMT)
@@ -93,30 +88,19 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
     Serial.println("Failed to open file for appending");
     return;
   }
-  if(file.print(message)){
-    // Serial.println("Message appended");
-  } else {
+  if(!file.print(message)){
     Serial.println("Append failed");
   }
   file.close();
-}
-
-void printArr(const uint8_t arr[]) {
-  for (int i = 0; i < 240; i++) {
-    Serial.printf("%d %i\n", i, arr[i]);
-  }
-  Serial.println();
 }
 
 // Callback function executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
   packetReceived++;
-  //display.clearDisplay();
   
   memcpy(&myData, incomingData, sizeof(myData));
 
-  // Serial.println(sizeof(myData));
   Serial.print(packetReceived);
   Serial.print('\t');
   Serial.print(myData.time);
@@ -126,9 +110,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   Serial.print(myData.packetNumber);
   Serial.print('\t');
   Serial.println(len);
-  // Serial.print('\t');
-  // Serial.println(sizeof(myData.arr));
-  // printArr(myData.arr);
 
 
   sprintf(str, "%d\t", packetReceived);
@@ -145,8 +126,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
   sprintf(str, "%i\n", len);
   appendFile(SD, path, str);
-  
-  // delay(50);
 }
 
 
@@ -164,7 +143,7 @@ void setup() {
 
   // Set ESP32 as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-  ESP_ERROR_CHECK( esp_wifi_start());
+  esp_wifi_start();
   
   int a = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_LR);
   esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_LORA_250K);
@@ -207,7 +186,5 @@ void setup() {
 }
 
 void loop() {
-  // Serial.println("WAAAAALLLL-EEEEEEEEEEEEEE");
-
-  // delay(5);
+  
 }
