@@ -14,6 +14,8 @@ const unsigned int localUdpPort = 4210;
 
 unsigned int pck_num = 1;
 
+unsigned int retransmissions = 10;
+
 const char *path = "/intiator_logs.txt";
 char str[100];
 
@@ -126,7 +128,7 @@ void loop() {
     for (int i = 0; i < adapter_sta_list.num; i++) {
       IPAddress ip = IPAddress(adapter_sta_list.sta[i].ip.addr);
       Serial.println(ip);
-      for (int i = 0; i < 5 && !send_int(pck_num, ip); i++) {
+      for (int i = 0; i < retransmissions && !send_int(pck_num, ip); i++) {
         delay(10);
       }
       delay(500);
